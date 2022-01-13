@@ -13,9 +13,26 @@ class py(Builder):
         self.supportedProjectTypes.append("lib")
         self.supportedProjectTypes.append("bin")
 
+        self.optionalKWArgs["version"] = "v0.0.0"
+        self.optionalKWArgs["author_name"] = "eons"
+        self.optionalKWArgs["author_email"] = "support@eons.llc"
+        self.optionalKWArgs["description"] = ""
+        self.optionalKWArgs["package_url"] = None
+        self.optionalKWArgs["classifiers"] = []
+        self.optionalKWArgs["license"] = "MIT License"
+        self.optionalKWArgs["python_min"] = "3.7"
+        self.optionalKWArgs["pypi_username"] = None
+        self.optionalKWArgs["pypi_password"] = None
+        
         self.validPyExtensions = [
             ".py"
         ]
+
+        self.imports = []
+        self.usedModules = []
+        self.requiredModules = []
+
+        self.PopulateBuiltInModules() #see end of file.
 
     def PreCall(self, **kwargs):
         super().PreCall(**kwargs)
@@ -26,10 +43,10 @@ class py(Builder):
 
     #Required Builder method. See that class for details.
     def Build(self):
-        self.buildPath = os.path.abspath(os.path.join(self.buildPath, self.projectName))
-        mkpath(self.buildPath)
-        os.chdir(self.buildPath)
-        logging.info(f"Using build path {self.buildPath}")
+        self.packagePath = os.path.abspath(os.path.join(self.buildPath, self.projectName))
+        mkpath(self.packagePath)
+        os.chdir(self.packagePath)
+        logging.info(f"Using package path {self.packagePath}")
         self.outFile = self.CreateFile(f"{self.projectName}.py")
         logging.info(f"Consolidating python files from {self.srcPath}")
         self.DecomposePyFiles(self.srcPath)
@@ -44,13 +61,21 @@ class py(Builder):
         elif (self.projectType == "bin"):
             self.MakeBin()
         self.CopyIncludes()
+        self.PopulateRequiredModules()
+        self.WriteRequirements()
+        self.WritePyproject()
+        self.WriteSetup()
         # If we can build our prepared project, let's do it!
         if (os.path.isfile(os.path.join(self.rootPath, "setup.cfg"))):
             logging.info(f"Begining python build process")
             os.chdir(self.rootPath)
+            self.InstallDependencies()
             self.BuildPackage()
+            if (self.testPath is not None):
+                self.RunCommand("pytest test/*")
             self.InstallPackage()
-        logging.info("Complete!")
+            if(self.pypi_username is not None and self.pypi_password is not None):
+                self.RunCommand(f"twine upload -u {self.pypi_username} -p {self.pypi_password} dist/*")
 
     #Adds an import line to *this.
     #Prevents duplicates.
@@ -139,7 +164,7 @@ class py(Builder):
 
     #Makes package a library
     def MakeLib(self):
-        initFile = self.CreateFile(os.path.join(self.buildPath, "__init__.py"))
+        initFile = self.CreateFile(os.path.join(self.packagePath, "__init__.py"))
         initFile.write(f'''from .{self.projectName} import *
 ''')
         initFile.close()
@@ -173,19 +198,436 @@ if __name__ == '__main__':
         #TODO: is there a better way?
         for thing in os.listdir(self.incPath):
             thingPath = os.path.join(self.incPath, thing)
-            destPath = os.path.join(self.buildPath, thing)
+            destPath = os.path.join(self.packagePath, thing)
             if os.path.isfile(thingPath):
                 copy_file(thingPath, destPath)
             elif os.path.isdir(thingPath):
                 copy_tree(thingPath, destPath)
-        for root, dirs, files in os.walk(self.buildPath):
+        for root, dirs, files in os.walk(self.packagePath):
             for d in dirs:
                 self.MakeEmptyInitFile(os.path.join(root,d))
 
+    #Create requirements.txt
+    def WriteRequirements(self):
+        requirementsFileName = os.path.join(self.rootPath, "requirements.txt")
+        logging.debug(f"Writing {requirementsFileName}")
+        requirementsFile = self.CreateFile(requirementsFileName)
+        requirementsFile.write(f'''pip
+build
+wheel
+setuptools
+twine
+pytest
+''')
+        #TODO: determine required package versions.
+        for req in self.requiredModules:
+            requirementsFile.write(f"{req}\n")
+        requirementsFile.close()
+
+    #Create pyproject.toml
+    def WritePyproject(self):
+        pyprojectFileName = os.path.join(self.rootPath, "pyproject.toml")
+        logging.debug(f"Writing {pyprojectFileName}")
+        pyprojectFile = self.CreateFile(pyprojectFileName)
+        pyprojectFile.write(f'''[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+''')
+        pyprojectFile.close()
+
+    #Create setup.cfg
+    def WriteSetup(self):
+        setupFileName = os.path.join(self.rootPath,"setup.cfg")
+        logging.debug(f"Writing {setupFileName}")
+        setupFile = self.CreateFile(setupFileName)
+        setupFile.write(f'''
+[metadata]
+name = {self.projectName}
+version = {self.version}
+author = {self.author_name}
+author_email = {self.author_email}
+description = {self.description}
+license_files = LICENSE.txt
+long_description = file: README.md
+long_description_content_type = text/markdown
+''')
+        if (self.package_url is not None):
+            setupFile.write(f'''
+url = {self.package_url}
+project_urls =
+    Bug Tracker = {self.package_url}/issues
+''')
+        setupFile.write(f'''
+classifiers =
+    Programming Language :: Python :: 3
+    License :: OSI Approved :: {self.license}
+    Operating System :: OS Independent
+''')
+        for cls in self.classifiers:
+            setupFile.write(f"    {cls}\n")
+
+        setupFile.write(f'''
+[options]
+package_dir =
+    = {os.path.basename(self.buildPath)}
+packages = find:
+python_requires = >={self.python_min}
+install_requires = 
+''')
+        for req in self.requiredModules:
+            setupFile.write(f"    {req}\n")
+
+        setupFile.write(f'''
+[options.packages.find]
+where = {os.path.basename(self.buildPath)}
+''')
+        if (self.projectType in ["bin"]):
+            setupFile.write(f'''
+[options.entry_points]
+console_scripts =
+    {self.projectName} = {self.projectName}:{self.projectName}
+''')
+        setupFile.close()
+
+    #Install any necessary packages.
+    def InstallDependencies(self):
+        self.RunCommand(f"python3 -m pip install -U -r {self.rootPath}/requirements.txt")
+
     #Builds the thing.
     def BuildPackage(self):
-        self.RunCommand("python -m build")
+        self.RunCommand("python3 -m build")
 
     #Installs the built package!
     def InstallPackage(self):
-        self.RunCommand("python -m pip install . -U")
+        self.RunCommand("python3 -m pip install . -U")
+
+    #Figure out which modules have been included and aren't built in.
+    def PopulateRequiredModules(self):
+        self.usedModules = list(set([i.split(' ')[1].split('.')[0].rstrip() for i in self.imports]))
+        logging.debug(f"Modules used: {self.usedModules}")
+        self.requiredModules = [m for m in self.usedModules if not m in self.pythonBuiltInModules]
+        logging.debug(f"Modules not built-in: {self.requiredModules}")
+
+    #Hard coded list of built in modules.
+    def PopulateBuiltInModules(self):
+        self.pythonBuiltInModules = [
+            "__future__",
+            "_abc",
+            "_ast",
+            "_asyncio",
+            "_bisect",
+            "_blake2",
+            "_bootlocale",
+            "_bz2",
+            "_codecs",
+            "_codecs_cn",
+            "_codecs_hk",
+            "_codecs_iso2022",
+            "_codecs_jp",
+            "_codecs_kr",
+            "_codecs_tw",
+            "_collections",
+            "_collections_abc",
+            "_compat_pickle",
+            "_compression",
+            "_contextvars",
+            "_csv",
+            "_ctypes",
+            "_ctypes_test",
+            "_datetime",
+            "_decimal",
+            "_distutils_findvs",
+            "_dummy_thread",
+            "_elementtree",
+            "_functools",
+            "_hashlib",
+            "_heapq",
+            "_imp",
+            "_io",
+            "_json",
+            "_locale",
+            "_lsprof",
+            "_lzma",
+            "_markupbase",
+            "_md5",
+            "_msi",
+            "_multibytecodec",
+            "_multiprocessing",
+            "_opcode",
+            "_operator",
+            "_osx_support",
+            "_overlapped",
+            "_pickle",
+            "_py_abc",
+            "_pydecimal",
+            "_pyio",
+            "_queue",
+            "_random",
+            "_sha1",
+            "_sha256",
+            "_sha3",
+            "_sha512",
+            "_signal",
+            "_sitebuiltins",
+            "_socket",
+            "_sqlite3",
+            "_sre",
+            "_ssl",
+            "_stat",
+            "_string",
+            "_strptime",
+            "_struct",
+            "_symtable",
+            "_testbuffer",
+            "_testcapi",
+            "_testconsole",
+            "_testimportmultiple",
+            "_testmultiphase",
+            "_thread",
+            "_threading_local",
+            "_tkinter",
+            "_tracemalloc",
+            "_warnings",
+            "_weakref",
+            "_weakrefset",
+            "_winapi",
+            "abc",
+            "aifc",
+            "antigravity",
+            "argparse",
+            "array",
+            "ast",
+            "asynchat",
+            "asyncio",
+            "asyncore",
+            "atexit",
+            "audioop",
+            "autoreload",
+            "backcall",
+            "base64",
+            "bdb",
+            "binascii",
+            "binhex",
+            "bisect",
+            "builtins",
+            "bz2",
+            "calendar",
+            "cgi",
+            "cgitb",
+            "chunk",
+            "cmath",
+            "cmd",
+            "code",
+            "codecs",
+            "codeop",
+            "collections",
+            "colorama",
+            "colorsys",
+            "compileall",
+            "concurrent",
+            "configparser",
+            "contextlib",
+            "contextvars",
+            "copy",
+            "copyreg",
+            "cProfile",
+            "crypt",
+            "csv",
+            "ctypes",
+            "curses",
+            "cythonmagic",
+            "dataclasses",
+            "datetime",
+            "dbm",
+            "decimal",
+            "decorator",
+            "difflib",
+            "dis",
+            "distutils",
+            "doctest",
+            "dummy_threading",
+            "easy_install",
+            "email",
+            "encodings",
+            "ensurepip",
+            "enum",
+            "errno",
+            "faulthandler",
+            "filecmp",
+            "fileinput",
+            "fnmatch",
+            "formatter",
+            "fractions",
+            "ftplib",
+            "functools",
+            "gc",
+            "genericpath",
+            "getopt",
+            "getpass",
+            "gettext",
+            "glob",
+            "gzip",
+            "hashlib",
+            "heapq",
+            "hmac",
+            "html",
+            "http",
+            "idlelib",
+            "imaplib",
+            "imghdr",
+            "imp",
+            "importlib",
+            "ind",
+            "inspect",
+            "io",
+            "ipaddress",
+            "IPython",
+            "ipython_genutils",
+            "itertools",
+            "jedi",
+            "json",
+            "keyword",
+            "lib2to3",
+            "linecache",
+            "locale",
+            "logging",
+            "lzma",
+            "macpath",
+            "mailbox",
+            "mailcap",
+            "marshal",
+            "math",
+            "mimetypes",
+            "mmap",
+            "modulefinder",
+            "msilib",
+            "msvcrt",
+            "multiprocessing",
+            "netrc",
+            "nntplib",
+            "nt",
+            "ntpath",
+            "nturl2path",
+            "numbers",
+            "opcode",
+            "operator",
+            "optparse",
+            "os",
+            "parser",
+            "parso",
+            "pathlib",
+            "pdb",
+            "pickle",
+            "pickleshare",
+            "pickletools",
+            "pip",
+            "pipes",
+            "pkg_resources",
+            "pkgutil",
+            "platform",
+            "plistlib",
+            "poplib",
+            "posixpath",
+            "pprint",
+            "profile",
+            "prompt_toolkit",
+            "pstats",
+            "pty",
+            "py_compile",
+            "pyclbr",
+            "pydoc",
+            "pydoc_data",
+            "pyexpat",
+            "pygments",
+            "queue",
+            "quopri",
+            "random",
+            "re",
+            "reprlib",
+            "rlcompleter",
+            "rmagic",
+            "runpy",
+            "sched",
+            "secrets",
+            "select",
+            "selectors",
+            "setuptools",
+            "shelve",
+            "shlex",
+            "shutil",
+            "signal",
+            "simplegeneric",
+            "site",
+            "six",
+            "smtpd",
+            "smtplib",
+            "sndhdr",
+            "socket",
+            "socketserver",
+            "sqlite3",
+            "sre_compile",
+            "sre_constants",
+            "sre_parse",
+            "ssl",
+            "stat",
+            "statistics",
+            "storemagic",
+            "string",
+            "stringprep",
+            "struct",
+            "subprocess",
+            "sunau",
+            "symbol",
+            "sympyprinting",
+            "symtable",
+            "sys",
+            "sysconfig",
+            "tabnanny",
+            "tarfile",
+            "telnetlib",
+            "tempfile",
+            "test",
+            "tests",
+            "textwrap",
+            "this",
+            "threading",
+            "time",
+            "timeit",
+            "tkinter",
+            "token",
+            "tokenize",
+            "trace",
+            "traceback",
+            "tracemalloc",
+            "traitlets",
+            "tty",
+            "turtle",
+            "turtledemo",
+            "types",
+            "typing",
+            "unicodedata",
+            "unittest",
+            "urllib",
+            "uu",
+            "uuid",
+            "venv",
+            "warnings",
+            "wave",
+            "wcwidth",
+            "weakref",
+            "webbrowser",
+            "winreg",
+            "winsound",
+            "wsgiref",
+            "xdrlib",
+            "xml",
+            "xmlrpc",
+            "xxsubtype",
+            "zipapp",
+            "zipfile",
+            "zipimport",
+            "zlib"
+        ]
