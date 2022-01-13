@@ -31,13 +31,15 @@ That file should look something like:
       "copy" : [
         {"../src/" : "src/"},
         {"../inc/" : "inc/"},
-        {"../test/" : "test/"}
+        {"../test/" : "test/"},
+        {"../README.md" : "README.md"},
+        {"../LICENSE" : "LICENSE"}
       ],
       "config" : {
         "author_name" : "eons",
         "author_email" : "support@eons.llc",
-        "desrciption" : "eons Basic Build System",
-        "package_url" : "https://github.com/eons-dev",
+        "description" : "eons Basic Build System",
+        "package_url" : "https://github.com/eons-dev/bin_ebbs",
         "license" : "MIT License",
         "python_min" : "3.7",
         "classifiers" : [
