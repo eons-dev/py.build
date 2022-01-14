@@ -7,90 +7,90 @@ from ebbs import Builder
 
 #Class name is what is used at cli, so we defy convention here in favor of ease-of-use.
 class py(Builder):
-    def __init__(self, name="Python Builder"):
+    def __init__(this, name="Python Builder"):
         super().__init__(name)
         
-        self.supportedProjectTypes.append("lib")
-        self.supportedProjectTypes.append("bin")
+        this.supportedProjectTypes.append("lib")
+        this.supportedProjectTypes.append("bin")
 
-        self.optionalKWArgs["version"] = "v0.0.0"
-        self.optionalKWArgs["author_name"] = "eons"
-        self.optionalKWArgs["author_email"] = "support@eons.llc"
-        self.optionalKWArgs["description"] = ""
-        self.optionalKWArgs["package_url"] = None
-        self.optionalKWArgs["classifiers"] = []
-        self.optionalKWArgs["license"] = "MIT License"
-        self.optionalKWArgs["python_min"] = "3.7"
-        self.optionalKWArgs["pypi_username"] = None
-        self.optionalKWArgs["pypi_password"] = None
+        this.optionalKWArgs["version"] = "v0.0.0"
+        this.optionalKWArgs["author_name"] = "eons"
+        this.optionalKWArgs["author_email"] = "support@eons.llc"
+        this.optionalKWArgs["description"] = ""
+        this.optionalKWArgs["package_url"] = None
+        this.optionalKWArgs["classifiers"] = []
+        this.optionalKWArgs["license"] = "MIT License"
+        this.optionalKWArgs["python_min"] = "3.7"
+        this.optionalKWArgs["pypi_username"] = None
+        this.optionalKWArgs["pypi_password"] = None
         
-        self.validPyExtensions = [
+        this.validPyExtensions = [
             ".py"
         ]
 
-        self.imports = []
-        self.usedModules = []
-        self.requiredModules = []
+        this.imports = []
+        this.usedModules = []
+        this.requiredModules = []
 
-        self.PopulateBuiltInModules() #see end of file.
+        this.PopulateBuiltInModules() #see end of file.
 
-    def PreCall(self, **kwargs):
+    def PreCall(this, **kwargs):
         super().PreCall(**kwargs)
-        self.outFile = None
-        self.decomposedFiles = []
-        self.imports = [] #all import statements
-        self.consolidatedContents = [] #all file contents. FIXME: This doesn't scale but need to write imports first.
+        this.outFile = None
+        this.decomposedFiles = []
+        this.imports = [] #all import statements
+        this.consolidatedContents = [] #all file contents. FIXME: This doesn't scale but need to write imports first.
 
     #Required Builder method. See that class for details.
-    def Build(self):
-        self.packagePath = os.path.abspath(os.path.join(self.buildPath, self.projectName))
-        mkpath(self.packagePath)
-        os.chdir(self.packagePath)
-        logging.info(f"Using package path {self.packagePath}")
-        self.outFile = self.CreateFile(f"{self.projectName}.py")
-        logging.info(f"Consolidating python files from {self.srcPath}")
-        self.DecomposePyFiles(self.srcPath)
-        self.WriteImports()
-        self.outFile.write(f'''
+    def Build(this):
+        this.packagePath = os.path.abspath(os.path.join(this.buildPath, this.projectName))
+        mkpath(this.packagePath)
+        os.chdir(this.packagePath)
+        logging.info(f"Using package path {this.packagePath}")
+        this.outFile = this.CreateFile(f"{this.projectName}.py")
+        logging.info(f"Consolidating python files from {this.srcPath}")
+        this.DecomposePyFiles(this.srcPath)
+        this.WriteImports()
+        this.outFile.write(f'''
 ######## START CONTENT ########
 ''')
-        self.WriteContents()
-        self.outFile.close()
-        if (self.projectType == "lib"):
-            self.MakeLib()
-        elif (self.projectType == "bin"):
-            self.MakeBin()
-        self.CopyIncludes()
-        self.PopulateRequiredModules()
-        self.WriteRequirements()
-        self.WritePyproject()
-        self.WriteSetup()
+        this.WriteContents()
+        this.outFile.close()
+        if (this.projectType == "lib"):
+            this.MakeLib()
+        elif (this.projectType == "bin"):
+            this.MakeBin()
+        this.CopyIncludes()
+        this.PopulateRequiredModules()
+        this.WriteRequirements()
+        this.WritePyproject()
+        this.WriteSetup()
         # If we can build our prepared project, let's do it!
-        if (os.path.isfile(os.path.join(self.rootPath, "setup.cfg"))):
+        if (os.path.isfile(os.path.join(this.rootPath, "setup.cfg"))):
             logging.info(f"Begining python build process")
-            os.chdir(self.rootPath)
-            self.InstallDependencies()
-            self.BuildPackage()
-            if (self.testPath is not None):
-                self.RunCommand("pytest test/*")
-            self.InstallPackage()
-            if(self.pypi_username is not None and self.pypi_password is not None):
-                self.RunCommand(f"twine upload -u {self.pypi_username} -p {self.pypi_password} dist/*")
+            os.chdir(this.rootPath)
+            this.InstallDependencies()
+            this.BuildPackage()
+            if (this.testPath is not None):
+                this.RunCommand("pytest test/*")
+            this.InstallPackage()
+            if(this.pypi_username is not None and this.pypi_password is not None):
+                this.RunCommand(f"twine upload -u {this.pypi_username} -p {this.pypi_password} dist/*")
 
     #Adds an import line to *this.
     #Prevents duplicates.
-    def AddImport(self, line):
-        if (line in self.imports):
+    def AddImport(this, line):
+        if (line in this.imports):
             return
-        self.imports.append(line)
+        this.imports.append(line)
 
     #Decompose a python file into imports and content.
     #Both are currently stored in member variables.
     #Recursive to account for dependencies.
     #Does not operate on the same file more than once.
-    def Decompose(self, pyFile):
+    def Decompose(this, pyFile):
         absPyFilePath = os.path.abspath(pyFile)
-        if (absPyFilePath in self.decomposedFiles):
+        if (absPyFilePath in this.decomposedFiles):
             logging.debug(f"Already decomposed {absPyFilePath}")
             return
         logging.debug(f"Starting to decompose {absPyFilePath}")
@@ -105,7 +105,7 @@ class py(Builder):
                         dependency = dependency[1:]
                     dependency = dependency.replace("//", "../")
                     logging.debug(f"Found dependency {dependency}")
-                    self.Decompose(os.path.join(os.path.dirname(pyFile), dependency))
+                    this.Decompose(os.path.join(os.path.dirname(pyFile), dependency))
                     continue
                 multiports = line.split(",")
                 if (len(multiports) > 1): #break out multiple imports for duplicate checking
@@ -116,102 +116,102 @@ class py(Builder):
                     #TODO: What's up with all this [:-1]+"\n" nonsense? Why does that invisible line ending change the uniqueness of the string (i.e. what is the line ending if not "\n")?
                     for i, imp in enumerate(multiports):
                         if (i == 0):
-                            self.AddImport(imp + "\n")
+                            this.AddImport(imp + "\n")
                             continue
                         elif (i == len(multiports)-1):
-                            self.AddImport(begin + imp[:-1] + "\n")
+                            this.AddImport(begin + imp[:-1] + "\n")
                         else:
-                            self.AddImport(begin + imp + "\n")
+                            this.AddImport(begin + imp + "\n")
                         # logging.debug(f"Got new import: {begin + imp}")
                 else:
-                    self.AddImport(line[:-1] + "\n")
+                    this.AddImport(line[:-1] + "\n")
 
             #TODO: Strip comments and newlines for smaller file footprint
 
             else: #content line
-                #FIXME: See above FIXME. This should be self.outFile.write(line) but imports need to be written first.
+                #FIXME: See above FIXME. This should be this.outFile.write(line) but imports need to be written first.
                 #FIXME: Need to enforce each line ending with a newline without things becoming weird.
-                self.consolidatedContents.append(line)
-        self.consolidatedContents.append("\n")
-        self.decomposedFiles.append(absPyFilePath)
+                this.consolidatedContents.append(line)
+        this.consolidatedContents.append("\n")
+        this.decomposedFiles.append(absPyFilePath)
         logging.debug(f"Finished decomposing {absPyFilePath}")
 
     #Walk a directory and Decompose all python files in it.
-    def DecomposePyFiles(self, directory):
+    def DecomposePyFiles(this, directory):
         for root, dirs, files in os.walk(directory):
             for f in files:
                 name, ext = os.path.splitext(f)
-                if (ext in self.validPyExtensions):
+                if (ext in this.validPyExtensions):
                     # logging.info(f"    {os.path.join(root, f)}")
-                    self.Decompose(os.path.join(root,f))
+                    this.Decompose(os.path.join(root,f))
 
     #Dump contents of import member buffer to disk.
-    def WriteImports(self):
-        for imp in self.imports:
-            self.outFile.write(imp)
+    def WriteImports(this):
+        for imp in this.imports:
+            this.outFile.write(imp)
 
     #Dump contents of content member buffer to disk.
-    def WriteContents(self):
-        for line in self.consolidatedContents:
-            self.outFile.write(line)
+    def WriteContents(this):
+        for line in this.consolidatedContents:
+            this.outFile.write(line)
 
     #Makes an empty init file
-    def MakeEmptyInitFile(self, path):
-        initFile = self.CreateFile(os.path.join(path, "__init__.py"))
+    def MakeEmptyInitFile(this, path):
+        initFile = this.CreateFile(os.path.join(path, "__init__.py"))
         initFile.write(f'''
 ''')
         initFile.close()
 
     #Makes package a library
-    def MakeLib(self):
-        initFile = self.CreateFile(os.path.join(self.packagePath, "__init__.py"))
-        initFile.write(f'''from .{self.projectName} import *
+    def MakeLib(this):
+        initFile = this.CreateFile(os.path.join(this.packagePath, "__init__.py"))
+        initFile.write(f'''from .{this.projectName} import *
 ''')
         initFile.close()
 
     #Makes package executable
-    def MakeBin(self):
+    def MakeBin(this):
         logging.info(f"Adding binary specific code.")
-        initFile = self.CreateFile("__init__.py")
+        initFile = this.CreateFile("__init__.py")
         #TODO: Support projects that aren't capitalized acronyms. For now, though, this is easy.
         initFile.write(f'''#!/usr/bin/env python3
-from .{self.projectName} import *
-{self.projectName} = {self.projectName.upper()}()
+from .{this.projectName} import *
+{this.projectName} = {this.projectName.upper()}()
 ''')
         initFile.close()
 
-        mainFile = self.CreateFile("__main__.py")
-        mainFile.write(f'''from . import {self.projectName}
+        mainFile = this.CreateFile("__main__.py")
+        mainFile.write(f'''from . import {this.projectName}
 if __name__ == '__main__':
-    {self.projectName}()
+    {this.projectName}()
 ''')
         mainFile.close()
 
     #Copy all files from the project include directory into our build folder.
-    def CopyIncludes(self):
-        if (self.incPath):
+    def CopyIncludes(this):
+        if (this.incPath):
             logging.info("Copying includes")
         else:
             return
 
         #This nonsense is required because we need `cp incPath/* buildpath/` behavior instead of `cp incPath buildpath/`
         #TODO: is there a better way?
-        for thing in os.listdir(self.incPath):
-            thingPath = os.path.join(self.incPath, thing)
-            destPath = os.path.join(self.packagePath, thing)
+        for thing in os.listdir(this.incPath):
+            thingPath = os.path.join(this.incPath, thing)
+            destPath = os.path.join(this.packagePath, thing)
             if os.path.isfile(thingPath):
                 copy_file(thingPath, destPath)
             elif os.path.isdir(thingPath):
                 copy_tree(thingPath, destPath)
-        for root, dirs, files in os.walk(self.packagePath):
+        for root, dirs, files in os.walk(this.packagePath):
             for d in dirs:
-                self.MakeEmptyInitFile(os.path.join(root,d))
+                this.MakeEmptyInitFile(os.path.join(root,d))
 
     #Create requirements.txt
-    def WriteRequirements(self):
-        requirementsFileName = os.path.join(self.rootPath, "requirements.txt")
+    def WriteRequirements(this):
+        requirementsFileName = os.path.join(this.rootPath, "requirements.txt")
         logging.debug(f"Writing {requirementsFileName}")
-        requirementsFile = self.CreateFile(requirementsFileName)
+        requirementsFile = this.CreateFile(requirementsFileName)
         requirementsFile.write(f'''pip
 build
 wheel
@@ -220,15 +220,15 @@ twine
 pytest
 ''')
         #TODO: determine required package versions.
-        for req in self.requiredModules:
+        for req in this.requiredModules:
             requirementsFile.write(f"{req}\n")
         requirementsFile.close()
 
     #Create pyproject.toml
-    def WritePyproject(self):
-        pyprojectFileName = os.path.join(self.rootPath, "pyproject.toml")
+    def WritePyproject(this):
+        pyprojectFileName = os.path.join(this.rootPath, "pyproject.toml")
         logging.debug(f"Writing {pyprojectFileName}")
-        pyprojectFile = self.CreateFile(pyprojectFileName)
+        pyprojectFile = this.CreateFile(pyprojectFileName)
         pyprojectFile.write(f'''[build-system]
 requires = [
     "setuptools>=42",
@@ -239,81 +239,81 @@ build-backend = "setuptools.build_meta"
         pyprojectFile.close()
 
     #Create setup.cfg
-    def WriteSetup(self):
-        setupFileName = os.path.join(self.rootPath,"setup.cfg")
+    def WriteSetup(this):
+        setupFileName = os.path.join(this.rootPath,"setup.cfg")
         logging.debug(f"Writing {setupFileName}")
-        setupFile = self.CreateFile(setupFileName)
+        setupFile = this.CreateFile(setupFileName)
         setupFile.write(f'''
 [metadata]
-name = {self.projectName}
-version = {self.version}
-author = {self.author_name}
-author_email = {self.author_email}
-description = {self.description}
+name = {this.projectName}
+version = {this.version}
+author = {this.author_name}
+author_email = {this.author_email}
+description = {this.description}
 license_files = LICENSE.txt
 long_description = file: README.md
 long_description_content_type = text/markdown
 ''')
-        if (self.package_url is not None):
+        if (this.package_url is not None):
             setupFile.write(f'''
-url = {self.package_url}
+url = {this.package_url}
 project_urls =
-    Bug Tracker = {self.package_url}/issues
+    Bug Tracker = {this.package_url}/issues
 ''')
         setupFile.write(f'''
 classifiers =
     Programming Language :: Python :: 3
-    License :: OSI Approved :: {self.license}
+    License :: OSI Approved :: {this.license}
     Operating System :: OS Independent
 ''')
-        for cls in self.classifiers:
+        for cls in this.classifiers:
             setupFile.write(f"    {cls}\n")
 
         setupFile.write(f'''
 [options]
 package_dir =
-    = {os.path.basename(self.buildPath)}
+    = {os.path.basename(this.buildPath)}
 packages = find:
-python_requires = >={self.python_min}
+python_requires = >={this.python_min}
 install_requires = 
 ''')
-        for req in self.requiredModules:
+        for req in this.requiredModules:
             setupFile.write(f"    {req}\n")
 
         setupFile.write(f'''
 [options.packages.find]
-where = {os.path.basename(self.buildPath)}
+where = {os.path.basename(this.buildPath)}
 ''')
-        if (self.projectType in ["bin"]):
+        if (this.projectType in ["bin"]):
             setupFile.write(f'''
 [options.entry_points]
 console_scripts =
-    {self.projectName} = {self.projectName}:{self.projectName}
+    {this.projectName} = {this.projectName}:{this.projectName}
 ''')
         setupFile.close()
 
     #Install any necessary packages.
-    def InstallDependencies(self):
-        self.RunCommand(f"python3 -m pip install -U -r {self.rootPath}/requirements.txt")
+    def InstallDependencies(this):
+        this.RunCommand(f"python3 -m pip install -U -r {this.rootPath}/requirements.txt")
 
     #Builds the thing.
-    def BuildPackage(self):
-        self.RunCommand("python3 -m build")
+    def BuildPackage(this):
+        this.RunCommand("python3 -m build")
 
     #Installs the built package!
-    def InstallPackage(self):
-        self.RunCommand("python3 -m pip install . -U")
+    def InstallPackage(this):
+        this.RunCommand("python3 -m pip install . -U")
 
     #Figure out which modules have been included and aren't built in.
-    def PopulateRequiredModules(self):
-        self.usedModules = list(set([i.split(' ')[1].split('.')[0].rstrip() for i in self.imports]))
-        logging.debug(f"Modules used: {self.usedModules}")
-        self.requiredModules = [m for m in self.usedModules if not m in self.pythonBuiltInModules]
-        logging.debug(f"Modules not built-in: {self.requiredModules}")
+    def PopulateRequiredModules(this):
+        this.usedModules = list(set([i.split(' ')[1].split('.')[0].rstrip() for i in this.imports]))
+        logging.debug(f"Modules used: {this.usedModules}")
+        this.requiredModules = [m for m in this.usedModules if not m in this.pythonBuiltInModules]
+        logging.debug(f"Modules not built-in: {this.requiredModules}")
 
     #Hard coded list of built in modules.
-    def PopulateBuiltInModules(self):
-        self.pythonBuiltInModules = [
+    def PopulateBuiltInModules(this):
+        this.pythonBuiltInModules = [
             "__future__",
             "_abc",
             "_ast",

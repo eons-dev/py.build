@@ -54,16 +54,16 @@ You can then invoke ebbs with a command like `ebbs . --version "0.0.0"`. Alterna
 
 The full list of options is for this Builder are:
 ```python
-self.optionalKWArgs["version"] = "v0.0.0"
-self.optionalKWArgs["author_name"] = "eons"
-self.optionalKWArgs["author_email"] = "support@eons.llc"
-self.optionalKWArgs["description"] = ""
-self.optionalKWArgs["package_url"] = None
-self.optionalKWArgs["classifiers"] = []
-self.optionalKWArgs["license"] = "MIT License"
-self.optionalKWArgs["python_min"] = "3.7"
-self.optionalKWArgs["pypi_username"] = None
-self.optionalKWArgs["pypi_password"] = None
+this.optionalKWArgs["version"] = "v0.0.0"
+this.optionalKWArgs["author_name"] = "eons"
+this.optionalKWArgs["author_email"] = "support@eons.llc"
+this.optionalKWArgs["description"] = ""
+this.optionalKWArgs["package_url"] = None
+this.optionalKWArgs["classifiers"] = []
+this.optionalKWArgs["license"] = "MIT License"
+this.optionalKWArgs["python_min"] = "3.7"
+this.optionalKWArgs["pypi_username"] = None
+this.optionalKWArgs["pypi_password"] = None
 ```
 
 **ALTERNATIVES:** as with all ebbs 2 projects, the above variables can be supplied via build.json, environment variables, and/or command line arguments. You decide what fits your workflow the best!
