@@ -1,0 +1,36 @@
+{
+  "name" : "sample",
+  "type" : "bin",
+  "clear_build_path" : false,
+  "build_in" : "bin_sample-package",
+  "next": [
+    {
+      "build" : "py_package",
+      "config" : {
+        "author_name" : "eons",
+        "author_email" : "support@eons.llc",
+        "description" : "Sample Package",
+        "package_url" : "https://github.com/eons-dev/build_py",
+        "license" : "MIT License",
+        "python_min" : "3.7",
+        "classifiers" : [
+          "Development Status :: 3 - Alpha"
+        ]
+      }
+    },
+    {
+      "build" : "test_case",
+      "config" : {
+        "assertions" : [
+          {
+            "kind" : "command",
+            "check" : "output",
+            "command" : "sample",
+            "expected" : "hello world",
+            "comparator" : "eq"
+          }
+        ]
+      }
+    }
+  ]
+}

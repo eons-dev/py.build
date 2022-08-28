@@ -6,7 +6,7 @@ from distutils.dir_util import copy_tree, mkpath
 from ebbs import Builder
 
 #Class name is what is used at cli, so we defy convention here in favor of ease-of-use.
-class py(Builder):
+class py_package(Builder):
     def __init__(this, name="Python Builder"):
         super().__init__(name)
         
@@ -21,9 +21,7 @@ class py(Builder):
         this.optionalKWArgs["classifiers"] = []
         this.optionalKWArgs["license"] = "MIT License"
         this.optionalKWArgs["python_min"] = "3.7"
-        this.optionalKWArgs["pypi_username"] = None
-        this.optionalKWArgs["pypi_password"] = None
-        
+
         this.validPyExtensions = [
             ".py"
         ]
@@ -33,6 +31,10 @@ class py(Builder):
         this.requiredModules = []
 
         this.PopulateBuiltInModules() #see end of file.
+
+    #Required Builder method. See that class for details.
+    def DidBuildSucceed(this):
+        return True #sure! why not?
 
     def PreCall(this, **kwargs):
         super().PreCall(**kwargs)
@@ -71,11 +73,6 @@ class py(Builder):
             os.chdir(this.rootPath)
             this.InstallDependencies()
             this.BuildPackage()
-            if (this.testPath is not None):
-                this.RunCommand("pytest test/*")
-            this.InstallPackage()
-            if(this.pypi_username is not None and this.pypi_password is not None):
-                this.RunCommand(f"twine upload -u {this.pypi_username} -p {this.pypi_password} dist/*")
 
     #Adds an import line to *this.
     #Prevents duplicates.

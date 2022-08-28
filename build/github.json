@@ -1,17 +1,20 @@
 {
+  "name" : "py",
+  "type" : "build",
+  "build_in" : "github",
   "clear_build_path" : true,
-  "ebbs_next": [
+  "next": [
     {
       "build" : "publish",
       "build_in" : "inc",
       "run_when" : [
-      	"release"
+        "release"
       ],
       "copy" : [
-        {"../inc/" : "inc/"}
+        {"../../inc/" : "inc/"}
       ],
       "config" : {
-      	"clear_build_path" : false,
+        "clear_build_path" : false,
         "visibility" : "public"
       }
     }
