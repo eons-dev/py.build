@@ -1,19 +1,67 @@
 {
-  "name" : "py",
-  "type" : "build",
   "build_in" : "github",
   "clear_build_path" : true,
   "next": [
     {
       "build" : "publish",
-      "build_in" : "inc",
+      "build_in" : "py_install",
       "run_when" : [
         "release"
       ],
       "copy" : [
-        {"../../inc/" : "inc/"}
+        {"../../inc/py_install.py" : "py_install/py_install.py"}
       ],
       "config" : {
+        "name" : "py_install",
+        "type" : "build",
+        "clear_build_path" : false,
+        "visibility" : "public"
+      }
+    },
+    {
+      "build" : "publish",
+      "build_in" : "py_package",
+      "run_when" : [
+        "release"
+      ],
+      "copy" : [
+        {"../../inc/py_package.py" : "py_package/py_package.py"}
+      ],
+      "config" : {
+        "name" : "py_package",
+        "type" : "build",
+        "clear_build_path" : false,
+        "visibility" : "public"
+      }
+    },
+    {
+      "build" : "publish",
+      "build_in" : "py_publish",
+      "run_when" : [
+        "release"
+      ],
+      "copy" : [
+        {"../../inc/py_publish.py" : "py_publish/py_publish.py"}
+      ],
+      "config" : {
+        "name" : "py_publish",
+        "type" : "build",
+        "clear_build_path" : false,
+        "visibility" : "public"
+      }
+    },
+    {
+      "build" : "publish",
+      "build_in" : "py_test",
+      "run_when" : [
+        "release"
+      ],
+      "copy" : [
+        {"../../inc/py_test.py" : "py_test/py_test.py"}
+      ],
+      "config" : {
+        "name" : "py_test",
+        "type" : "build",
         "clear_build_path" : false,
         "visibility" : "public"
       }
