@@ -21,6 +21,7 @@ class py_package(Builder):
         this.optionalKWArgs["classifiers"] = []
         this.optionalKWArgs["license"] = "MIT License"
         this.optionalKWArgs["python_min"] = "3.7"
+        this.optionalKWArgs["requirements"] = [] # for custom requirements (e.g. use local installs and don't download.)
 
         this.validPyExtensions = [
             ".py"
@@ -209,14 +210,6 @@ if __name__ == '__main__':
         requirementsFileName = os.path.join(this.rootPath, "requirements.txt")
         logging.debug(f"Writing {requirementsFileName}")
         requirementsFile = this.CreateFile(requirementsFileName)
-        requirementsFile.write(f'''pip
-build
-wheel
-setuptools
-twine
-pytest
-''')
-        #TODO: determine required package versions.
         for req in this.requiredModules:
             requirementsFile.write(f"{req}\n")
         requirementsFile.close()
@@ -305,8 +298,27 @@ console_scripts =
     def PopulateRequiredModules(this):
         this.usedModules = list(set([i.split(' ')[1].split('.')[0].rstrip() for i in this.imports]))
         logging.debug(f"Modules used: {this.usedModules}")
-        this.requiredModules = [m for m in this.usedModules if not m in this.pythonBuiltInModules]
-        logging.debug(f"Modules not built-in: {this.requiredModules}")
+        if (this.requirements):
+            logging.debug(f"Provided requirements: {this.requirements}")
+            missingReq = [m for m in this.usedModules if m not in this.requirements] 
+            additionalReq = [m for m in this.requirements if m not in this.usedModules] 
+            logging.debug(f"Missing required modules: {missingReq}")
+            logging.debug(f"Unneeded but provided modules: {additionalReq}")
+            this.requiredModules = [m for m in this.requirements if not m in this.pythonBuiltInModules]
+        else:
+            this.requiredModules = [m for m in this.usedModules if not m in this.pythonBuiltInModules]
+        
+        minimumRequiredModules = [
+            "pip",
+            "build",
+            "wheel",
+            "setuptools",
+            "twine",
+            "pytest"
+        ]
+        this.requiredModules = list(set(this.requiredModules + minimumRequiredModules))
+        
+        logging.debug(f"Will use modules: {this.requiredModules}")
 
     #Hard coded list of built in modules.
     def PopulateBuiltInModules(this):
