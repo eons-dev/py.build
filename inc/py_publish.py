@@ -3,7 +3,7 @@ import logging
 from ebbs import Builder
 
 #Class name is what is used at cli, so we defy convention here in favor of ease-of-use.
-class pypi_publish(Builder):
+class py_publish(Builder):
     def __init__(this, name="PyPI Publisher"):
         super().__init__(name)
         
