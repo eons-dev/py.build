@@ -63,7 +63,7 @@
         "clear_build_path" : false,
         "visibility" : "public"
       }
-    }
+    },
     {
       "run_when_any" : [
         "schedule"
