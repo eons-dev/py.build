@@ -11,6 +11,7 @@ class py_publish(Builder):
 
         this.requiredKWArgs.append("pypi_username")
         this.requiredKWArgs.append("pypi_password")
+        this.requiredKWArgs.append("version")
 
     #Required Builder method. See that class for details.
     def Build(this):

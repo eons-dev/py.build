@@ -1,15 +1,13 @@
 {
-  "build_in" : "github",
-  "clear_build_path" : true,
   "next": [
     {
-      "build" : "publish",
-      "build_in" : "py_install",
-      "run_when" : [
+      "run_when_any" : [
         "release"
       ],
+      "build" : "publish",
+      "build_in" : "build_py_install",
       "copy" : [
-        {"../../inc/py_install.py" : "py_install/py_install.py"}
+        {"../../../inc/py_install.py" : "build_py_install/py_install.py"}
       ],
       "config" : {
         "name" : "py_install",
@@ -19,13 +17,13 @@
       }
     },
     {
-      "build" : "publish",
-      "build_in" : "py_package",
-      "run_when" : [
+      "run_when_any" : [
         "release"
       ],
+      "build" : "publish",
+      "build_in" : "build_py_package",
       "copy" : [
-        {"../../inc/py_package.py" : "py_package/py_package.py"}
+        {"../../../inc/py_package.py" : "build_py_package/py_package.py"}
       ],
       "config" : {
         "name" : "py_package",
@@ -35,13 +33,13 @@
       }
     },
     {
-      "build" : "publish",
-      "build_in" : "py_publish",
-      "run_when" : [
+      "run_when_any" : [
         "release"
       ],
+      "build" : "publish",
+      "build_in" : "build_py_publish",
       "copy" : [
-        {"../../inc/py_publish.py" : "py_publish/py_publish.py"}
+        {"../../../inc/py_publish.py" : "build_py_publish/py_publish.py"}
       ],
       "config" : {
         "name" : "py_publish",
@@ -51,19 +49,30 @@
       }
     },
     {
-      "build" : "publish",
-      "build_in" : "py_test",
-      "run_when" : [
+      "run_when_any" : [
         "release"
       ],
+      "build" : "publish",
+      "build_in" : "build_py_test",
       "copy" : [
-        {"../../inc/py_test.py" : "py_test/py_test.py"}
+        {"../../../inc/py_test.py" : "build_py_test/py_test.py"}
       ],
       "config" : {
         "name" : "py_test",
         "type" : "build",
         "clear_build_path" : false,
         "visibility" : "public"
+      }
+    }
+    {
+      "run_when_any" : [
+        "schedule"
+      ],
+      "build" : "proxy",
+      "build_in" : "./",
+      "config" : {
+        "clear_build_path" : false,
+        "proxy" : "../../config/schedule.json"
       }
     }
   ]
