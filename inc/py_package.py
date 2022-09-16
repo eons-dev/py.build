@@ -309,12 +309,6 @@ console_scripts =
             this.requiredModules = [m for m in this.usedModules if not m in this.pythonBuiltInModules]
         
         minimumRequiredModules = [
-            "pip",
-            "build",
-            "wheel",
-            "setuptools",
-            "twine",
-            "pytest"
         ]
         this.requiredModules = list(set(this.requiredModules + minimumRequiredModules))
         
