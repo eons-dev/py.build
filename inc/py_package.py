@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import shutil
 from distutils.file_util import copy_file
@@ -46,6 +47,7 @@ class py_package(Builder):
 
     #Required Builder method. See that class for details.
     def Build(this):
+        this.InstallBuildTools()
         this.packagePath = os.path.abspath(os.path.join(this.buildPath, this.projectName))
         mkpath(this.packagePath)
         os.chdir(this.packagePath)
@@ -74,6 +76,17 @@ class py_package(Builder):
             os.chdir(this.rootPath)
             this.InstallDependencies()
             this.BuildPackage()
+
+    def InstallBuildTools(this):
+        buildTools = [
+            "pip",
+            "build",
+            "wheel",
+            "setuptools",
+            "twine",
+            "pytest"
+        ]
+        this.RunCommand(f"{sys.executable} -m pip install {' '.join(buildTools)}")
 
     #Adds an import line to *this.
     #Prevents duplicates.
