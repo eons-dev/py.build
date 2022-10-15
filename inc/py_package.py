@@ -38,8 +38,8 @@ class py_package(Builder):
     def DidBuildSucceed(this):
         return True #sure! why not?
 
-    def PreCall(this, **kwargs):
-        super().PreCall(**kwargs)
+    def PreBuild(this):
+        super().PreBuild()
         this.outFile = None
         this.decomposedFiles = []
         this.imports = [] #all import statements
