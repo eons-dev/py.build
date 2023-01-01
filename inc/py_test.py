@@ -11,7 +11,13 @@ class py_test(Builder):
 
     #Required Builder method. See that class for details.
     def Build(this):
-        this.RunCommand(f"pytest {this.test_path}/*")    
+        options = []
+        if (this.executor.verbosity > 3):
+            options.append("-o log_cli=true")
+        if (this.executor.verbosity > 3):
+            options.append("-o log_cli_level=debug")
+
+        this.RunCommand(f"pytest {' '.join(options)} {this.test_path}/*")    
     
     #Required Builder method. See that class for details.
     def DidBuildSucceed(this):
