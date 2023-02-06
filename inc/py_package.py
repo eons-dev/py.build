@@ -48,7 +48,7 @@ class py_package(Builder):
 
     #Required Builder method. See that class for details.
     def Build(this):
-        # this.InstallBuildTools()
+        this.InstallBuildTools()
         this.packagePath = os.path.abspath(os.path.join(this.buildPath, this.projectName))
         mkpath(this.packagePath)
         os.chdir(this.packagePath)
