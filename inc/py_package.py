@@ -23,6 +23,7 @@ class py_package(Builder):
         this.optionalKWArgs["license"] = "MIT License"
         this.optionalKWArgs["python_min"] = "3.7"
         this.optionalKWArgs["requirements"] = [] # for custom requirements (e.g. use local installs and don't download.)
+        this.optionalKWArgs["skip_module_detection"] = [] # if you want to remove an auto-detected requirement.
 
         this.validPyExtensions = [
             ".py"
@@ -47,7 +48,7 @@ class py_package(Builder):
 
     #Required Builder method. See that class for details.
     def Build(this):
-        this.InstallBuildTools()
+        # this.InstallBuildTools()
         this.packagePath = os.path.abspath(os.path.join(this.buildPath, this.projectName))
         mkpath(this.packagePath)
         os.chdir(this.packagePath)
@@ -311,19 +312,9 @@ console_scripts =
     def PopulateRequiredModules(this):
         this.usedModules = list(set([i.split(' ')[1].split('.')[0].rstrip() for i in this.imports]))
         logging.debug(f"Modules used: {this.usedModules}")
-        if (this.requirements):
-            logging.debug(f"Provided requirements: {this.requirements}")
-            missingReq = [m for m in this.usedModules if m not in this.requirements] 
-            additionalReq = [m for m in this.requirements if m not in this.usedModules] 
-            logging.debug(f"Missing required modules: {missingReq}")
-            logging.debug(f"Unneeded but provided modules: {additionalReq}")
-            this.requiredModules = [m for m in this.requirements if not m in this.pythonBuiltInModules]
-        else:
-            this.requiredModules = [m for m in this.usedModules if not m in this.pythonBuiltInModules]
-        
-        minimumRequiredModules = [
-        ]
-        this.requiredModules = list(set(this.requiredModules + minimumRequiredModules))
+
+        this.requiredModules = list(set(this.requirements + [m for m in this.usedModules if m not in this.skip_module_detection]))
+        this.requiredModules = [m for m in this.requiredModules if not m in this.pythonBuiltInModules]
         
         logging.debug(f"Will use modules: {this.requiredModules}")
 
