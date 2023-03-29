@@ -9,6 +9,7 @@ class py_install(Builder):
         
         this.supportedProjectTypes.append("lib")
         this.supportedProjectTypes.append("bin")
+        this.supportedProjectTypes.append("exe")
 
         this.optionalKWArgs["requirements_file"] = "requirements.txt"
 

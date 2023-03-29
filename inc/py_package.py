@@ -13,6 +13,8 @@ class py_package(Builder):
         
         this.supportedProjectTypes.append("lib")
         this.supportedProjectTypes.append("bin")
+        this.supportedProjectTypes.append("exe")
+
 
         this.optionalKWArgs["version"] = "v0.0.0"
         this.optionalKWArgs["author_name"] = "eons"
