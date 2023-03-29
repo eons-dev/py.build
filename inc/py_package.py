@@ -65,9 +65,9 @@ class py_package(Builder):
         this.WriteContents()
         this.outFile.close()
         if (this.projectType == "lib"):
-            this.MakeLib()
-        elif (this.projectType == "bin"):
-            this.MakeBin()
+            this.MakeLibrary()
+        elif (this.projectType in ["bin", "exe"]):
+            this.MakeExecutable()
         this.CopyIncludes()
         this.PopulateRequiredModules()
         this.WriteRequirements()
@@ -177,14 +177,14 @@ class py_package(Builder):
         initFile.close()
 
     #Makes package a library
-    def MakeLib(this):
+    def MakeLibrary(this):
         initFile = this.CreateFile(os.path.join(this.packagePath, "__init__.py"))
         initFile.write(f'''from .{this.projectName} import *
 ''')
         initFile.close()
 
     #Makes package executable
-    def MakeBin(this):
+    def MakeExecutable(this):
         logging.info(f"Adding binary specific code.")
         initFile = this.CreateFile("__init__.py")
         #TODO: Support projects that aren't capitalized acronyms. For now, though, this is easy.
