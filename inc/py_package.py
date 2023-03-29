@@ -185,7 +185,7 @@ class py_package(Builder):
 
     #Makes package executable
     def MakeExecutable(this):
-        logging.info(f"Adding binary specific code.")
+        logging.info(f"Adding executable specific code.")
         initFile = this.CreateFile("__init__.py")
         #TODO: Support projects that aren't capitalized acronyms. For now, though, this is easy.
         initFile.write(f'''#!/usr/bin/env python3
@@ -290,7 +290,7 @@ install_requires =
 [options.packages.find]
 where = {os.path.basename(this.buildPath)}
 ''')
-        if (this.projectType in ["bin"]):
+        if (this.projectType in ["bin", "exe"]):
             setupFile.write(f'''
 [options.entry_points]
 console_scripts =
