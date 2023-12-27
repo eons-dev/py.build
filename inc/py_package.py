@@ -26,6 +26,7 @@ class py_package(Builder):
         this.optionalKWArgs["python_min"] = "3.7"
         this.optionalKWArgs["requirements"] = [] # for custom requirements (e.g. use local installs and don't download.)
         this.optionalKWArgs["skip_module_detection"] = [] # if you want to remove an auto-detected requirement.
+        this.optionalKWArgs["exeAlias"] = None # if you want to alias the executable name.
 
         this.validPyExtensions = [
             ".py"
@@ -77,7 +78,7 @@ class py_package(Builder):
         if (os.path.isfile(os.path.join(this.rootPath, "setup.cfg"))):
             logging.info(f"Begining python build process")
             os.chdir(this.rootPath)
-            this.InstallDependencies()
+            # this.InstallDependencies()
             this.BuildPackage()
 
     def InstallBuildTools(this):
@@ -189,7 +190,7 @@ class py_package(Builder):
         initFile = this.CreateFile("__init__.py")
         #TODO: Support projects that aren't capitalized acronyms. For now, though, this is easy.
         initFile.write(f'''#!/usr/bin/env python3
-from .{this.projectName} import *
+from .{this.projectName} import {this.projectName.upper()}
 {this.projectName} = {this.projectName.upper()}()
 ''')
         initFile.close()
@@ -291,10 +292,13 @@ install_requires =
 where = {os.path.basename(this.buildPath)}
 ''')
         if (this.projectType in ["bin", "exe"]):
+            if (this.exeAlias is None):
+                this.exeAlias = this.projectName
+
             setupFile.write(f'''
 [options.entry_points]
 console_scripts =
-    {this.projectName} = {this.projectName}:{this.projectName}
+    {this.exeAlias} = {this.projectName}:{this.projectName}
 ''')
         setupFile.close()
 
