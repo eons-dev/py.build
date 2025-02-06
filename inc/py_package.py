@@ -2,8 +2,8 @@ import os
 import sys
 import logging
 import shutil
-from distutils.file_util import copy_file
-from distutils.dir_util import copy_tree, mkpath
+from shutil import copy2 as copy_file, copytree as copy_tree
+from os import makedirs as mkpath
 from ebbs import Builder
 
 #Class name is what is used at cli, so we defy convention here in favor of ease-of-use.
@@ -16,17 +16,18 @@ class py_package(Builder):
         this.supportedProjectTypes.append("exe")
 
 
-        this.optionalKWArgs["version"] = "v0.0.0"
-        this.optionalKWArgs["author_name"] = "eons"
-        this.optionalKWArgs["author_email"] = "support@eons.llc"
-        this.optionalKWArgs["description"] = ""
-        this.optionalKWArgs["package_url"] = None
-        this.optionalKWArgs["classifiers"] = []
-        this.optionalKWArgs["license"] = "MIT License"
-        this.optionalKWArgs["python_min"] = "3.7"
-        this.optionalKWArgs["requirements"] = [] # for custom requirements (e.g. use local installs and don't download.)
-        this.optionalKWArgs["skip_module_detection"] = [] # if you want to remove an auto-detected requirement.
-        this.optionalKWArgs["exeAlias"] = None # if you want to alias the executable name.
+        this.arg.kw.optional["version"] = "v0.0.0"
+        this.arg.kw.optional["author_name"] = "eons"
+        this.arg.kw.optional["author_email"] = "support@eons.llc"
+        this.arg.kw.optional["description"] = ""
+        this.arg.kw.optional["package_url"] = None
+        this.arg.kw.optional["classifiers"] = []
+        this.arg.kw.optional["license"] = "MIT License"
+        this.arg.kw.optional["python_min"] = "3.7"
+        this.arg.kw.optional["requirements"] = [] # for custom requirements (e.g. use local installs and don't download.)
+        this.arg.kw.optional["skip_module_detection"] = [] # if you want to remove an auto-detected requirement.
+        this.arg.kw.optional["ignore_imports"] = [] # if you want to strip imports from the final file (e.g. temporary modules)
+        this.arg.kw.optional["exeAlias"] = None # if you want to alias the executable name.
 
         this.validPyExtensions = [
             ".py"
@@ -96,6 +97,9 @@ class py_package(Builder):
     #Prevents duplicates.
     def AddImport(this, line):
         if (line in this.imports):
+            return
+        if (line.split(' ')[1].split('.')[0].rstrip() in this.ignore_imports):
+            logging.debug(f"Ignoring import: '{line}'")
             return
         this.imports.append(line)
 
